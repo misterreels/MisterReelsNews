@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8918146497424357"
+     crossorigin="anonymous"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Read the latest news on Mister Reels Subscribers.">
+    <title>Article - Mister Reels News</title>
+    <link rel="icon" type="image/png" href="images/logo.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Playfair+Display:wght@700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <!-- Supabase SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-config.js"></script>
+    <style>
+        .main-header { position: fixed; top: 35px; left: 0; right: 0; z-index: 1000; }
+        .article-page { padding-top: 0; }
+    </style>
+</head>
+<body>
+    <!-- Breaking News Ticker -->
+    <div class="breaking-news-bar">
+        <span class="breaking-label">BREAKING</span>
+        <div class="ticker-wrap">
+            <div class="ticker">
+                <span class="ticker-item">🏏 ICC Cricket World Cup 2026: India vs Australia final sets new viewership record</span>
+                <span class="ticker-item">⚽ Premier League: Manchester City clinches dramatic title race victory</span>
+                <span class="ticker-item">🎬 Summer blockbuster season kicks off with record-breaking opening weekends</span>
+                <span class="ticker-item">🏆 Award season predictions are heating up — see who's leading the race</span>
+                <span class="ticker-item">📺 Major streaming platforms announce massive content budgets for 2026</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Navigation -->
+    <header class="main-header scrolled" id="main-header">
+        <div class="header-container">
+            <a href="index.html" class="logo" id="logo-link">
+                <img src="images/logo.png" alt="Mister Reels Logo" class="logo-img">
+                <div class="logo-text">
+                    <span class="logo-name">MISTER REELS</span>
+                    <span class="logo-tagline">NEWS</span>
+                </div>
+            </a>
+            <nav class="main-nav" id="main-nav">
+                <a href="index.html" class="nav-link" id="nav-home">Home</a>
+                <a href="games.html" class="nav-link" id="nav-games">Games</a>
+                <a href="privacy.html" class="nav-link" id="nav-privacy">Privacy</a>
+            </nav>
+            <div class="header-actions">
+                <button type="button" class="menu-toggle" id="menu-toggle" aria-label="Toggle menu">
+                    <span></span><span></span><span></span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Article Content -->
+    <main class="article-page" id="article-page">
+        <div class="article-hero" id="article-hero">
+            <img src="" alt="" class="article-hero-img" id="article-hero-img">
+            <div class="article-hero-overlay"></div>
+        </div>
+
+        <div class="article-container">
+            <div class="article-header" id="article-header">
+                <a href="index.html" class="back-link" id="back-link">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+                    Back to Subscribers
+                </a>
+                <span class="article-category" id="article-category"></span>
+                <h1 class="article-title" id="article-title"></h1>
+                <div class="article-meta-bar">
+                    <div class="article-author-info">
+                        <div class="author-avatar" id="author-avatar"></div>
+                        <div>
+                            <span class="article-author" id="article-author"></span>
+                            <span class="article-date" id="article-date"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="article-body" id="article-body">
+                <!-- Content loaded by JS -->
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="main-footer" id="main-footer">
+        <div class="footer-container">
+            <div class="footer-grid">
+                <div class="footer-brand">
+                    <div class="footer-logo">
+                        <img src="images/logo.png" alt="Mister Reels Logo" class="footer-logo-img">
+                        <span class="footer-logo-text">MISTER REELS NEWS</span>
+                    </div>
+                    <p class="footer-about">Your #1 source for the latest in movies, TV shows, streaming, and entertainment industry news.</p>
+                </div>
+                <div class="footer-links-section">
+                    <h4 class="footer-heading">Entertainment</h4>
+                    <ul class="footer-links">
+                        <li><a href="index.html#movies-section">Movies</a></li>
+                        <li><a href="index.html#sports-section">Sports</a></li>
+                    </ul>
+                </div>
+                <div class="footer-links-section">
+                    <h4 class="footer-heading">Follow Us</h4>
+                    <div class="social-links">
+                        <a href="https://x.com/misterreelsnews" class="social-link" aria-label="Twitter">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+                        </a>
+                        <a href="https://www.instagram.com/misterreels/" class="social-link" aria-label="Instagram">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/></svg>
+                        </a>
+                        <a href="https://youtube.com/@misterreels88" class="social-link" aria-label="YouTube">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2026 Mister Reels News. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Header scroll effect
+        function initHeader() {
+            const header = document.getElementById('main-header');
+            if (!header) return;
+            
+            window.addEventListener('scroll', () => {
+                if (window.scrollY > 50) {
+                    header.classList.add('scrolled');
+                } else {
+                    header.classList.remove('scrolled');
+                }
+            });
+        }
+        
+        // Mobile menu toggle
+        function initMobileMenu() {
+            const toggle = document.getElementById('menu-toggle');
+            const nav = document.getElementById('main-nav');
+            if (!toggle || !nav) return;
+            
+            toggle.addEventListener('click', () => {
+                nav.classList.toggle('open');
+                toggle.classList.toggle('active');
+            });
+        }
+        
+        // Load subscribers article
+        async function loadSubscribersArticle() {
+            const params = new URLSearchParams(window.location.search);
+            const articleId = params.get('id');
+            
+            if (!articleId) {
+                document.getElementById('article-title').textContent = 'No article ID provided';
+                document.getElementById('back-link').href = 'index.html';
+                return;
+            }
+            
+            if (!window.supabase || !window.isSupabaseConfigured) {
+                document.getElementById('article-title').textContent = 'Supabase not configured';
+                return;
+            }
+            
+            try {
+                console.log('Loading article with ID:', articleId);
+                const { data: article, error } = await window.supabase
+                    .from('subscribers_news')
+                    .select('*')
+                    .eq('id', articleId)
+                    .single();
+                
+                console.log('Article data:', article, 'Error:', error);
+                
+                if (error) {
+                    console.error('Error fetching article:', error);
+                    document.getElementById('article-title').textContent = 'Error loading article: ' + error.message;
+                    return;
+                }
+                
+                if (!article) {
+                    document.getElementById('article-title').textContent = 'Article not found';
+                    return;
+                }
+                
+                // Update page title
+                document.title = article.title + ' - Mister Reels News';
+                
+                // Set hero image
+                if (article.image) {
+                    document.getElementById('article-hero-img').src = article.image;
+                }
+                
+                // Set article details
+                document.getElementById('article-category').textContent = article.category || '';
+                document.getElementById('article-category').style.background = '#8b5cf6';
+                document.getElementById('article-title').textContent = article.title;
+                document.getElementById('article-author').textContent = article.author || 'Mister Reels';
+                document.getElementById('article-date').textContent = article.date || new Date(article.created_at).toLocaleDateString();
+                
+                // Set content
+                document.getElementById('article-body').innerHTML = article.content || article.excerpt || '';
+                
+            } catch (error) {
+                console.error('Error loading article:', error);
+                document.getElementById('article-title').textContent = 'Error loading article';
+            }
+        }
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            initHeader();
+            initMobileMenu();
+            loadSubscribersArticle();
+        });
+    </script>
+</body>
+</html>

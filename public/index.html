@@ -48,10 +48,10 @@
         </div>
     </header>
 
-    <!-- Latest News Section -->
+    <!-- Subscribers News Section -->
     <section class="section" id="latest-news-section">
         <div class="section-header">
-            <h2 class="section-title">Latest News</h2>
+            <h2 class="section-title">Exclusive Subscriber Content</h2>
             <div class="section-line"></div>
         </div>
         <div class="news-grid" id="subscribers-news-container">
@@ -70,47 +70,10 @@
                 </p>
             </div>
 
-            <!-- Voting Categories Wrapper - puts both voting sections side by side -->
-            <div class="voting-categories-wrapper">
-                <!-- Next Movie / Series Voting -->
-                <div class="voting-category">
-                    <h3 class="category-title">🎬 Next Movie / Series</h3>
-
-                    <!-- Series Input (direct vote) -->
-                    <div class="series-input-panel" id="series-panel-next">
-                        <input type="text" class="vote-input" id="series-next" placeholder="Type a movie or series name">
-                        <button class="vote-btn" onclick="submitVote('next')">Vote</button>
-                    </div>
-
-                    <!-- Top 5 Results -->
-                    <div class="results-panel" id="results-next">
-                        <h4 class="results-title">Top 5 Voted</h4>
-                        <div class="results-list" id="results-list-next">
-                            <!-- Results populated by JS -->
-                        </div>
-                        <button class="view-all-btn" onclick="viewAllResults('next')">View All</button>
-                    </div>
-                </div>
-
-                <!-- General Voting -->
-                <div class="voting-category">
-                    <h3 class="category-title">💬 General</h3>
-
-                    <!-- Series Input (direct vote) -->
-                    <div class="series-input-panel" id="series-panel-general">
-                        <input type="text" class="vote-input" id="series-general" placeholder="Type a series name">
-                        <button class="vote-btn" onclick="submitVote('general')">Vote</button>
-                    </div>
-
-                    <!-- Top 5 Results -->
-                    <div class="results-panel" id="results-general">
-                        <h4 class="results-title">Top 5 Voted</h4>
-                        <div class="results-list" id="results-list-general">
-                            <!-- Results populated by JS -->
-                        </div>
-                        <button class="view-all-btn" onclick="viewAllResults('general')">View All</button>
-                    </div>
-                </div>
+            <!-- Voting Categories Wrapper - dynamically populated from database -->
+            <div class="voting-categories-wrapper" id="voting-categories-wrapper">
+                <!-- Categories will be loaded dynamically from database -->
+                <p style="color: #94a3b8; text-align: center; padding: 40px;">Loading voting categories...</p>
             </div>
         </div>
     </section>

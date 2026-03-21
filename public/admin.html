@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - Mister Reels</title>
+    <link rel="icon" type="image/png" href="images/logo.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Playfair+Display:wght@700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-config.js"></script>
+    <style>
+        /* Admin Panel Styles */
+        :root {
+            --primary: #8b5cf6;
+            --secondary: #64748b;
+            --danger: #ef4444;
+            --success: #22c55e;
+            --bg-dark: #0f172a;
+            --bg-darker: #1a1a2e;
+            --card: #16213e;
+            --text: #f1f5f9;
+            --text-muted: #94a3b8;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(135deg, var(--bg-dark) 0%, #0a0e27 100%);
+            color: var(--text);
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+        }
+
+        .admin-container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar */
+        .admin-sidebar {
+            width: 280px;
+            background: var(--bg-darker);
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 30px 20px;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+            left: 0;
+            top: 0;
+        }
+
+        .admin-logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .admin-logo img {
+            width: 40px;
+            height: 40px;
+        }
+
+        .admin-logo-text {
+            font-size: 18px;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--primary), #ec4899);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .admin-nav {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .admin-nav-item {
+            padding: 14px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 14px;
+            color: var(--text-muted);
+            border: none;
+            background: none;
+            width: 100%;
+            text-align: left;
+        }
+
+        .admin-nav-item:hover {
+            background: rgba(139, 92, 246, 0.1);
+            color: var(--primary);
+            transform: translateX(5px);
+        }
+
+        .admin-nav-item.active {
+            background: rgba(139, 92, 246, 0.2);
+            color: var(--primary);
+            font-weight: 600;
+        }
+
+        .admin-nav-item.logout {
+            margin-top: 40px;
+            color: var(--danger);
+        }
+
+        .admin-nav-item.logout:hover {
+            background: rgba(239, 68, 68, 0.1);
+        }
+
+        /* Main Content */
+        .admin-main {
+            margin-left: 280px;
+            flex: 1;
+            padding: 40px;
+            overflow-y: auto;
+        }
+
+        .admin-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 40px;
+        }
+
+        .admin-title {
+            font-size: 32px;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--primary), #ec4899);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .admin-subtitle {
+            font-size: 14px;
+            color: var(--text-muted);
+            margin-top: 5px;
+        }
+
+        /* Tabs */
+        .admin-tabs {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 30px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 20px;
+        }
+
+        .admin-tab {
+            padding: 12px 20px;
+            border: none;
+            background: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            position: relative;
+            transition: color 0.3s;
+        }
+
+        .admin-tab:hover {
+            color: var(--primary);
+        }
+
+        .admin-tab.active {
+            color: var(--primary);
+        }
+
+        .admin-tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: -20px;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: var(--primary);
+            border-radius: 2px;
+        }
+
+        /* Tab Content */
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Grid */
+        .admin-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 20px;
+        }
+
+        .admin-card {
+            background: var(--card);
+            border: 1px solid rgba(139, 92, 246, 0.2);
+            border-radius: 12px;
+            padding: 20px;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .admin-card:hover {
+            border-color: var(--primary);
+            box-shadow: 0 0 20px rgba(139, 92, 246, 0.1);
+            transform: translateY(-5px);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 15px;
+        }
+
+        .card-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--text);
+            flex: 1;
+        }
+
+        .card-badge {
+            background: rgba(139, 92, 246, 0.2);
+            color: var(--primary);
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .card-meta {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-bottom: 10px;
+            line-height: 1.6;
+        }
+
+        .card-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .btn-small {
+            flex: 1;
+            padding: 8px 12px;
+            border: none;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-edit {
+            background: rgba(139, 92, 246, 0.2);
+            color: var(--primary);
+        }
+
+        .btn-edit:hover {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-delete {
+            background: rgba(239, 68, 68, 0.2);
+            color: var(--danger);
+        }
+
+        .btn-delete:hover {
+            background: var(--danger);
+            color: white;
+        }
+
+        /* Form */
+        .admin-form {
+            background: var(--card);
+            border: 1px solid rgba(139, 92, 246, 0.2);
+            border-radius: 12px;
+            padding: 30px;
+            max-width: 600px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            font-size: 14px;
+            color: var(--text);
+        }
+
+        .form-input,
+        .form-textarea,
+        .form-select {
+            width: 100%;
+            padding: 12px 16px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            border-radius: 8px;
+            color: var(--text);
+            font-family: inherit;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        .form-input:focus,
+        .form-textarea:focus,
+        .form-select:focus {
+            outline: none;
+            border-color: var(--primary);
+            background: rgba(139, 92, 246, 0.1);
+            box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+        }
+
+        .form-textarea {
+            resize: vertical;
+            min-height: 120px;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 30px;
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), #ec4899);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(139, 92, 246, 0.3);
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+
+        .btn-secondary {
+            background: var(--secondary);
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #475569;
+        }
+
+        .btn-cancel {
+            background: transparent;
+            color: var(--text-muted);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-cancel:hover {
+            border-color: var(--text-muted);
+            color: var(--text);
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--bg-darker);
+            border: 1px solid rgba(139, 92, 246, 0.2);
+            border-radius: 12px;
+            max-width: 600px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            padding: 40px;
+            position: relative;
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 28px;
+            cursor: pointer;
+            transition: color 0.3s;
+        }
+
+        .modal-close:hover {
+            color: var(--primary);
+        }
+
+        .modal-title {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 20px;
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-muted);
+        }
+
+        .empty-state-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+        }
+
+        .empty-state-title {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 10px;
+            color: var(--text);
+        }
+
+        /* Alert */
+        .alert {
+            padding: 16px 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 14px;
+        }
+
+        .alert-success {
+            background: rgba(34, 197, 94, 0.2);
+            color: var(--success);
+            border: 1px solid rgba(34, 197, 94, 0.3);
+        }
+
+        .alert-error {
+            background: rgba(239, 68, 68, 0.2);
+            color: var(--danger);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .admin-sidebar {
+                width: 70px;
+            }
+
+            .admin-sidebar .admin-logo-text,
+            .admin-sidebar .admin-nav-item > span:not(:first-child) {
+                display: none;
+            }
+
+            .admin-nav-item {
+                justify-content: center;
+                padding: 16px;
+            }
+
+            .admin-main {
+                margin-left: 70px;
+                padding: 20px;
+            }
+
+            .admin-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .admin-form {
+                max-width: 100%;
+            }
+
+            .modal-content {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-container">
+        <!-- Sidebar -->
+        <aside class="admin-sidebar">
+            <div class="admin-logo">
+                <img src="images/logo.png" alt="Mister Reels">
+                <span class="admin-logo-text">Admin</span>
+            </div>
+
+            <nav class="admin-nav">
+                <button class="admin-nav-item active" onclick="switchTab('news')">
+                    <span>📰</span>
+                    <span>News</span>
+                </button>
+                <button class="admin-nav-item" onclick="switchTab('voting')">
+                    <span>🗳️</span>
+                    <span>Voting</span>
+                </button>
+                <button class="admin-nav-item logout" onclick="logoutAdmin()">
+                    <span>🚪</span>
+                    <span>Logout</span>
+                </button>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="admin-main">
+            <!-- Header -->
+            <div class="admin-header">
+                <div>
+                    <h1 class="admin-title">Dashboard</h1>
+                    <p class="admin-subtitle">Manage your news and voting sessions</p>
+                </div>
+            </div>
+
+            <!-- News Tab -->
+            <div id="news-tab" class="tab-content active">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+                    <h2 class="admin-title" style="margin: 0; font-size: 24px;">Subscriber News</h2>
+                    <button class="btn btn-primary" onclick="openAddNewsModal()">
+                        <span>+</span> Add News
+                    </button>
+                </div>
+
+                <div id="news-list" class="admin-grid"></div>
+            </div>
+
+            <!-- Voting Tab -->
+            <div id="voting-tab" class="tab-content">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+                    <h2 class="admin-title" style="margin: 0; font-size: 24px;">Voting Categories</h2>
+                    <button class="btn btn-primary" onclick="openAddVotingModal()">
+                        <span>+</span> Add Category
+                    </button>
+                </div>
+
+                <div id="voting-list" class="admin-grid"></div>
+            </div>
+        </main>
+    </div>
+
+    <!-- News Modal -->
+    <div id="news-modal" class="modal">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeNewsModal()">×</button>
+            <h2 class="modal-title" id="news-modal-title">Add News</h2>
+
+            <div id="news-alerts"></div>
+
+            <form id="news-form" onsubmit="saveNews(event)">
+                <div class="form-group">
+                    <label class="form-label">Title *</label>
+                    <input type="text" id="news-title" class="form-input" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Category *</label>
+                    <input type="text" id="news-category" class="form-input" placeholder="e.g., Technology, Entertainment" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Author *</label>
+                    <input type="text" id="news-author" class="form-input" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Date</label>
+                    <input type="date" id="news-date" class="form-input">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Image URL</label>
+                    <input type="url" id="news-image" class="form-input" placeholder="https://example.com/image.jpg">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Excerpt</label>
+                    <textarea id="news-excerpt" class="form-textarea" placeholder="Short summary of the news"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Content *</label>
+                    <textarea id="news-content" class="form-textarea" required placeholder="Full content..."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">
+                        <input type="checkbox" id="news-published" style="margin-right: 8px; cursor: pointer;">
+                        Published
+                    </label>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary" style="flex: 1;">Save News</button>
+                    <button type="button" class="btn btn-cancel" onclick="closeNewsModal()">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Voting Modal -->
+    <div id="voting-modal" class="modal">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeVotingModal()">×</button>
+            <h2 class="modal-title" id="voting-modal-title">Add Voting Category</h2>
+
+            <div id="voting-alerts"></div>
+
+            <form id="voting-form" onsubmit="saveVoting(event)">
+                <div class="form-group">
+                    <label class="form-label">Title *</label>
+                    <input type="text" id="voting-title" class="form-input" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Slug (URL-friendly name) *</label>
+                    <input type="text" id="voting-slug" class="form-input" placeholder="e.g., subscription" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Icon/Emoji *</label>
+                    <input type="text" id="voting-icon" class="form-input" placeholder="e.g., 💳" maxlength="10" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Placeholder Text *</label>
+                    <input type="text" id="voting-placeholder" class="form-input" placeholder="e.g., Enter your suggestion" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Display Order *</label>
+                    <input type="number" id="voting-order" class="form-input" value="0" required>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary" style="flex: 1;">Save Category</button>
+                    <button type="button" class="btn btn-cancel" onclick="closeVotingModal()">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Authentication Modal -->
+    <div id="auth-modal" class="modal active">
+        <div class="modal-content">
+            <h2 class="modal-title">Admin Access</h2>
+            <p style="color: var(--text-muted); margin-bottom: 20px;">Enter password to access the admin panel</p>
+
+            <form onsubmit="authenticateAdmin(event)">
+                <div class="form-group">
+                    <input type="password" id="admin-password" class="form-input" placeholder="Enter password" autofocus>
+                </div>
+                <div id="auth-alert"></div>
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary" style="flex: 1;">Login</button>
+                    <a href="index.html" class="btn btn-cancel" style="flex: 1; text-align: center; text-decoration: none;">Back to Home</a>
+                </div>
+            </form>
+
+            <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid rgba(255, 255, 255, 0.1);">
+                <p style="font-size: 12px; color: var(--text-muted);">
+                    Your device fingerprint: <code style="background: rgba(139, 92, 246, 0.2); padding: 4px 8px; border-radius: 4px; font-family: monospace; font-size: 11px;">
+                        <span id="device-id-display"></span>
+                    </code>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+    <script src="admin.js"></script>
+</body>
+</html>

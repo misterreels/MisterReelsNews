@@ -2,8 +2,8 @@
 // Replace these values with your Supabase project credentials
 // Get them from: Supabase Dashboard > Settings > API
 
-const supabaseUrl = "https://namaczchgkjclgphcblk.supabase.co";
-const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5hbWFjemNoZ2tqY2xncGhjYmxrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMzODUyMzAsImV4cCI6MjA4ODk2MTIzMH0.J-jBEYDEqAkDdM6qL5gCilno6b0_uRhqH--A-QoTlyk";
+const supabaseUrl = "https://drjzwdsdrmrcvmzmnqip.supabase.co";
+const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRyanp3ZHNkcm1yY3Ztem1ucWlwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM4MTEzMDIsImV4cCI6MjA4OTM4NzMwMn0.ZyHxQk7WxUZ_UzSmxdINDVrYXC-zgVvAnhP1tXHCp9E";
 
 // NewsData.io Configuration
 // Get your free API key from: https://newsdata.io/

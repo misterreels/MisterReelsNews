@@ -40,9 +40,12 @@ function closeAuthModal() {
 }
 
 function openAddNewsModal() {
-    currentEditNewsId = null;
-    document.getElementById('news-form').reset();
-    document.getElementById('news-modal-title').textContent = 'Add News';
+    // Only reset if not editing
+    if (!currentEditNewsId) {
+        currentEditNewsId = null;
+        document.getElementById('news-form').reset();
+        document.getElementById('news-modal-title').textContent = 'Add News';
+    }
     document.getElementById('news-alerts').innerHTML = '';
     const modal = document.getElementById('news-modal');
     if (modal) modal.classList.add('active');
@@ -55,9 +58,12 @@ function closeNewsModal() {
 }
 
 function openAddVotingModal() {
-    currentEditVotingId = null;
-    document.getElementById('voting-form').reset();
-    document.getElementById('voting-modal-title').textContent = 'Add Voting Category';
+    // Only reset if not editing
+    if (!currentEditVotingId) {
+        currentEditVotingId = null;
+        document.getElementById('voting-form').reset();
+        document.getElementById('voting-modal-title').textContent = 'Add Voting Category';
+    }
     document.getElementById('voting-alerts').innerHTML = '';
     const modal = document.getElementById('voting-modal');
     if (modal) modal.classList.add('active');
@@ -245,7 +251,7 @@ async function saveNews(event) {
         };
 
         if (currentEditNewsId) {
-            // Update existing news
+            // Update existing news (don't include created_at on update)
             const { error } = await window.supabase
                 .from('subscribers_news')
                 .update(newsData)
@@ -274,7 +280,7 @@ async function saveNews(event) {
         }, 1500);
     } catch (error) {
         console.error('Error saving news:', error);
-        showAlert('Error saving news. Please try again.', 'error', 'news-alerts');
+        showAlert('Error saving news: ' + (error.message || 'Please try again.'), 'error', 'news-alerts');
     }
 }
 
@@ -290,7 +296,7 @@ async function editNews(id) {
 
         if (error || !data) throw error;
 
-        // Populate form with data
+        // Populate form with data BEFORE opening modal
         currentEditNewsId = id;
         document.getElementById('news-title').value = data.title;
         document.getElementById('news-category').value = data.category;
@@ -303,6 +309,7 @@ async function editNews(id) {
         document.getElementById('news-modal-title').textContent = 'Edit News';
         document.getElementById('news-alerts').innerHTML = '';
 
+        // Now open the modal with data already populated
         openAddNewsModal();
     } catch (error) {
         console.error('Error loading news for edit:', error);
@@ -414,26 +421,34 @@ async function saveVoting(event) {
             slug,
             icon,
             placeholder,
-            display_order: order,
-            created_at: new Date().toISOString()
+            display_order: order
         };
 
         if (currentEditVotingId) {
-            // Update existing category
+            // Update existing category (don't include created_at on update)
             const { error } = await window.supabase
                 .from('voting_categories')
                 .update(votingData)
                 .eq('id', currentEditVotingId);
 
-            if (error) throw error;
+            if (error) {
+                console.error('Update error details:', error);
+                throw error;
+            }
             showAlert('Category updated successfully!', 'success', 'voting-alerts');
         } else {
             // Insert new category
             const { error } = await window.supabase
                 .from('voting_categories')
-                .insert([votingData]);
+                .insert([{
+                    ...votingData,
+                    created_at: new Date().toISOString()
+                }]);
 
-            if (error) throw error;
+            if (error) {
+                console.error('Insert error details:', error);
+                throw error;
+            }
             showAlert('Category created successfully!', 'success', 'voting-alerts');
         }
 
@@ -444,7 +459,8 @@ async function saveVoting(event) {
         }, 1500);
     } catch (error) {
         console.error('Error saving voting category:', error);
-        showAlert('Error saving category. Please try again.', 'error', 'voting-alerts');
+        const errorMsg = error.message ? error.message : 'Unknown error occurred';
+        showAlert('Error saving category: ' + errorMsg, 'error', 'voting-alerts');
     }
 }
 
@@ -458,9 +474,12 @@ async function editVoting(id) {
             .eq('id', id)
             .single();
 
-        if (error || !data) throw error;
+        if (error || !data) {
+            console.error('Load error:', error);
+            throw error;
+        }
 
-        // Populate form with data
+        // Populate form with data BEFORE opening modal
         currentEditVotingId = id;
         document.getElementById('voting-title').value = data.title;
         document.getElementById('voting-slug').value = data.slug;
@@ -470,6 +489,7 @@ async function editVoting(id) {
         document.getElementById('voting-modal-title').textContent = 'Edit Voting Category';
         document.getElementById('voting-alerts').innerHTML = '';
 
+        // Now open the modal with data already populated
         openAddVotingModal();
     } catch (error) {
         console.error('Error loading voting category for edit:', error);

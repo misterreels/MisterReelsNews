@@ -57,7 +57,7 @@ function isAdminAuthorized() {
 // Authorize current device as admin
 function authorizeAdminDevice(password) {
     // Simple password check - change this to your desired password
-    if (password === 'misterreels2026') {
+    if (password === 'MISTERreels@8753') {
         const currentId = getAdminDeviceId();
         localStorage.setItem('authorized_admin_device_id', currentId);
         return true;

@@ -745,4 +745,92 @@ document.addEventListener('DOMContentLoaded', async () => {
     
     // Load and render voting categories dynamically from database
     await renderVotingCategories();
+
+    // Load applications
+    await loadApplications();
 });
+
+/* =========================================
+   Applications System
+   ========================================= */
+
+async function loadApplications() {
+    const appsContainer = document.getElementById('apps-container');
+    if (!appsContainer || !window.supabase) return;
+
+    try {
+        const { data: apps, error } = await window.supabase
+            .from('applications')
+            .select('*')
+            .order('created_at', { ascending: false });
+
+        if (error) throw error;
+
+        if (!apps || apps.length === 0) {
+            appsContainer.innerHTML = '<p style="color: #94a3b8; text-align: center; grid-column: 1/-1; padding: 40px;">No applications available at the moment.</p>';
+            return;
+        }
+
+        appsContainer.innerHTML = apps.map(app => `
+            <div class="app-card fade-in-up">
+                <div class="app-icon">
+                    ${app.icon_url ? `<img src="${app.icon_url}" alt="${escapeHtml(app.title)}">` : '📱'}
+                </div>
+                <h3 class="app-title">${escapeHtml(app.title)}</h3>
+                <span class="app-version">v${escapeHtml(app.version)}</span>
+                <p class="app-description">${escapeHtml(app.description)}</p>
+                <button class="btn-download" onclick="handleDownload(this, '${app.download_url}', '${escapeHtml(app.title)}')">
+                    <div class="download-progress"></div>
+                    <span class="download-icon">📥</span>
+                    <span class="spinner"></span>
+                    <span class="download-text">Download Now</span>
+                </button>
+            </div>
+        `).join('');
+    } catch (error) {
+        console.error('Error loading applications:', error);
+        appsContainer.innerHTML = '<p style="color: #ef4444; text-align: center; grid-column: 1/-1; padding: 40px;">Failed to load applications. Please try again later.</p>';
+    }
+}
+
+function handleDownload(btn, url, title) {
+    if (btn.classList.contains('downloading')) return;
+
+    btn.classList.add('downloading');
+    const progress = btn.querySelector('.download-progress');
+    const text = btn.querySelector('.download-text');
+    const originalText = text.textContent;
+    
+    text.textContent = 'Preparing...';
+    
+    let width = 0;
+    const interval = setInterval(() => {
+        if (width >= 100) {
+            clearInterval(interval);
+            text.textContent = 'Starting Download...';
+            
+            setTimeout(() => {
+                // Trigger actual download
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = ''; // Browser will try to use the filename from URL
+                link.target = '_blank';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                
+                // Reset button after a delay
+                setTimeout(() => {
+                    btn.classList.remove('downloading');
+                    progress.style.width = '0%';
+                    text.textContent = originalText;
+                }, 2000);
+            }, 1000);
+        } else {
+            width += Math.random() * 15;
+            if (width > 100) width = 100;
+            progress.style.width = width + '%';
+            if (width > 30) text.textContent = 'Downloading... ' + Math.floor(width) + '%';
+        }
+    }, 200);
+}

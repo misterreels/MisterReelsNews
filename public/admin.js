@@ -5,6 +5,7 @@
 // Track current edit ID
 let currentEditNewsId = null;
 let currentEditVotingId = null;
+let currentEditAppId = null;
 
 // =========================================
 // Initialization - Check Authentication
@@ -22,6 +23,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         closeAuthModal();
         await loadNewsList();
         await loadVotingList();
+        await loadAppsList();
     }
 });
 
@@ -75,10 +77,29 @@ function closeVotingModal() {
     currentEditVotingId = null;
 }
 
+function openAddAppModal() {
+    // Only reset if not editing
+    if (!currentEditAppId) {
+        currentEditAppId = null;
+        document.getElementById('apps-form').reset();
+        document.getElementById('apps-modal-title').textContent = 'Add Application';
+    }
+    document.getElementById('apps-alerts').innerHTML = '';
+    const modal = document.getElementById('apps-modal');
+    if (modal) modal.classList.add('active');
+}
+
+function closeAppModal() {
+    const modal = document.getElementById('apps-modal');
+    if (modal) modal.classList.remove('active');
+    currentEditAppId = null;
+}
+
 // Close modal when clicking outside
 window.addEventListener('click', (event) => {
     const newsModal = document.getElementById('news-modal');
     const votingModal = document.getElementById('voting-modal');
+    const appsModal = document.getElementById('apps-modal');
     const authModal = document.getElementById('auth-modal');
 
     if (newsModal && event.target === newsModal) {
@@ -86,6 +107,9 @@ window.addEventListener('click', (event) => {
     }
     if (votingModal && event.target === votingModal) {
         closeVotingModal();
+    }
+    if (appsModal && event.target === appsModal) {
+        closeAppModal();
     }
 });
 
@@ -519,5 +543,168 @@ async function deleteVoting(id) {
     } catch (error) {
         console.error('Error deleting voting category:', error);
         alert('Error deleting category. Please try again.');
+    }
+}
+
+// =========================================
+// Applications CRUD Operations
+// =========================================
+
+async function loadAppsList() {
+    const appsList = document.getElementById('apps-list');
+    if (!appsList || !window.supabase) return;
+
+    appsList.innerHTML = '<p style="grid-column: 1/-1; color: var(--text-muted); text-align: center; padding: 40px;">Loading applications...</p>';
+
+    try {
+        const { data, error } = await window.supabase
+            .from('applications')
+            .select('*')
+            .order('created_at', { ascending: false });
+
+        if (error) throw error;
+
+        if (!data || data.length === 0) {
+            appsList.innerHTML = `
+                <div style="grid-column: 1/-1; text-align: center; padding: 60px 20px; color: var(--text-muted);">
+                    <div style="font-size: 48px; margin-bottom: 20px;">📱</div>
+                    <h3 style="font-size: 18px; color: var(--text); margin-bottom: 10px;">No Applications Yet</h3>
+                    <p>Click "Add Application" to register your first app.</p>
+                </div>
+            `;
+            return;
+        }
+
+        appsList.innerHTML = data.map(app => `
+            <div class="admin-card">
+                <div class="card-header">
+                    <h3 class="card-title">${escapeHtml(app.title)}</h3>
+                    <span class="card-badge">v${escapeHtml(app.version)}</span>
+                </div>
+                <div class="card-meta">
+                    <div style="margin-bottom: 8px;">${escapeHtml(app.description.substring(0, 100))}${app.description.length > 100 ? '...' : ''}</div>
+                    <div style="font-size: 11px; word-break: break-all; opacity: 0.7;">URL: ${escapeHtml(app.download_url)}</div>
+                </div>
+                <div class="card-actions">
+                    <button class="btn-small btn-edit" onclick="editApp(${app.id})">Edit</button>
+                    <button class="btn-small btn-delete" onclick="deleteApp(${app.id})">Delete</button>
+                </div>
+            </div>
+        `).join('');
+    } catch (error) {
+        console.error('Error loading applications:', error);
+        appsList.innerHTML = '<p style="grid-column: 1/-1; color: var(--danger); text-align: center; padding: 40px;">Error loading applications. Please try again.</p>';
+    }
+}
+
+async function saveApp(event) {
+    event.preventDefault();
+
+    const title = document.getElementById('app-title').value.trim();
+    const description = document.getElementById('app-description').value.trim();
+    const version = document.getElementById('app-version').value.trim();
+    const link = document.getElementById('app-link').value.trim();
+    const icon = document.getElementById('app-icon').value.trim();
+
+    // Validation
+    if (!title || !description || !version || !link) {
+        showAlert('Please fill in all required fields', 'error', 'apps-alerts');
+        return;
+    }
+
+    try {
+        const appData = {
+            title,
+            description,
+            version,
+            download_url: link,
+            icon_url: icon,
+            updated_at: new Date().toISOString()
+        };
+
+        if (currentEditAppId) {
+            // Update existing app
+            const { error } = await window.supabase
+                .from('applications')
+                .update(appData)
+                .eq('id', currentEditAppId);
+
+            if (error) throw error;
+            showAlert('Application updated successfully!', 'success', 'apps-alerts');
+        } else {
+            // Insert new app
+            const { error } = await window.supabase
+                .from('applications')
+                .insert([{
+                    ...appData,
+                    created_at: new Date().toISOString()
+                }]);
+
+            if (error) throw error;
+            showAlert('Application added successfully!', 'success', 'apps-alerts');
+        }
+
+        // Reload list and close modal
+        setTimeout(() => {
+            closeAppModal();
+            loadAppsList();
+        }, 1500);
+    } catch (error) {
+        console.error('Error saving application:', error);
+        showAlert('Error saving application: ' + (error.message || 'Please try again.'), 'error', 'apps-alerts');
+    }
+}
+
+async function editApp(id) {
+    if (!window.supabase) return;
+
+    try {
+        const { data, error } = await window.supabase
+            .from('applications')
+            .select('*')
+            .eq('id', id)
+            .single();
+
+        if (error || !data) throw error;
+
+        // Populate form
+        currentEditAppId = id;
+        document.getElementById('app-title').value = data.title;
+        document.getElementById('app-description').value = data.description;
+        document.getElementById('app-version').value = data.version;
+        document.getElementById('app-link').value = data.download_url;
+        document.getElementById('app-icon').value = data.icon_url || '';
+        document.getElementById('apps-modal-title').textContent = 'Edit Application';
+        document.getElementById('apps-alerts').innerHTML = '';
+
+        openAddAppModal();
+    } catch (error) {
+        console.error('Error loading application for edit:', error);
+        alert('Error loading application. Please try again.');
+    }
+}
+
+async function deleteApp(id) {
+    if (!confirm('Are you sure you want to delete this application? This action cannot be undone.')) {
+        return;
+    }
+
+    if (!window.supabase) return;
+
+    try {
+        const { error } = await window.supabase
+            .from('applications')
+            .delete()
+            .eq('id', id);
+
+        if (error) throw error;
+
+        showAlert('Application deleted successfully!', 'success', 'apps-alerts');
+        setTimeout(() => {
+            loadAppsList();
+        }, 1000);
+    } catch (error) {
+        console.error('Error deleting application:', error);
+        alert('Error deleting application. Please try again.');
     }
 }

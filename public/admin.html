@@ -542,6 +542,10 @@
                     <span>🗳️</span>
                     <span>Voting</span>
                 </button>
+                <button class="admin-nav-item" onclick="switchTab('apps')">
+                    <span>📱</span>
+                    <span>Applications</span>
+                </button>
                 <button class="admin-nav-item logout" onclick="logoutAdmin()">
                     <span>🚪</span>
                     <span>Logout</span>
@@ -582,7 +586,61 @@
 
                 <div id="voting-list" class="admin-grid"></div>
             </div>
+
+            <!-- Apps Tab -->
+            <div id="apps-tab" class="tab-content">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+                    <h2 class="admin-title" style="margin: 0; font-size: 24px;">Applications</h2>
+                    <button class="btn btn-primary" onclick="openAddAppModal()">
+                        <span>+</span> Add Application
+                    </button>
+                </div>
+
+                <div id="apps-list" class="admin-grid"></div>
+            </div>
         </main>
+    </div>
+
+    <!-- Apps Modal -->
+    <div id="apps-modal" class="modal">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeAppModal()">×</button>
+            <h2 class="modal-title" id="apps-modal-title">Add Application</h2>
+
+            <div id="apps-alerts"></div>
+
+            <form id="apps-form" onsubmit="saveApp(event)">
+                <div class="form-group">
+                    <label class="form-label">Title *</label>
+                    <input type="text" id="app-title" class="form-input" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Description *</label>
+                    <textarea id="app-description" class="form-textarea" required></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Version *</label>
+                    <input type="text" id="app-version" class="form-input" placeholder="e.g., 1.0.0" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Download Link *</label>
+                    <input type="url" id="app-link" class="form-input" placeholder="https://example.com/app.apk" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Icon URL</label>
+                    <input type="url" id="app-icon" class="form-input" placeholder="https://example.com/icon.png">
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary" style="flex: 1;">Save Application</button>
+                    <button type="button" class="btn btn-cancel" onclick="closeAppModal()">Cancel</button>
+                </div>
+            </form>
+        </div>
     </div>
 
     <!-- News Modal -->

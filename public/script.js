@@ -182,38 +182,9 @@ async function loadSubscribersNews() {
     }
 }
 
-// Open subscribers news modal
+// Open subscribers news in new page
 async function openSubscribersNews(id) {
-    if (!window.supabase) return;
-
-    try {
-        const { data, error } = await window.supabase
-            .from('subscribers_news')
-            .select('*')
-            .eq('id', id)
-            .single();
-
-        if (error || !data) return;
-
-        // Increment view count
-        await window.supabase
-            .from('subscribers_news')
-            .update({ views: (data.views || 0) + 1 })
-            .eq('id', id);
-
-        const modal = document.getElementById('subscribers-news-modal');
-        if (modal) {
-            document.getElementById('modal-subscribers-title').textContent = data.title;
-            document.getElementById('modal-subscribers-content').innerHTML = `
-                <p style="color: #64748b; margin-bottom: 15px;">${escapeHtml(data.author)} · ${data.date || new Date(data.created_at).toLocaleDateString()}</p>
-                ${data.image ? `<img src="${data.image}" alt="${escapeHtml(data.title)}" style="width: 100%; max-height: 300px; object-fit: cover; border-radius: 8px; margin-bottom: 20px;">` : ''}
-                <div style="line-height: 1.8; color: #e2e8f0;">${data.content || data.excerpt || ''}</div>
-            `;
-            modal.style.display = 'flex';
-        }
-    } catch (error) {
-        console.error('Error opening news:', error);
-    }
+    window.location.href = 'subscribers-article.html?id=' + id;
 }
 
 // Close subscribers news modal

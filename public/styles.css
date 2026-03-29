@@ -1517,7 +1517,13 @@ ul {
    Article Page
    ========================================= */
 .article-page {
-    padding-top: 70px;
+    padding-top: 0;
+}
+
+@media (max-width: 768px) {
+    .article-page {
+        padding-top: 0;
+    }
 }
 
 .article-hero {

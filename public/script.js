@@ -719,6 +719,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Load applications
     await loadApplications();
+
+    // Load congratulations
+    await loadCongratulations();
 });
 
 /* =========================================
@@ -804,4 +807,55 @@ function handleDownload(btn, url, title) {
             if (width > 30) text.textContent = 'Downloading... ' + Math.floor(width) + '%';
         }
     }, 200);
+}
+
+/* =========================================
+   Congratulations System
+   ========================================= */
+
+async function loadCongratulations() {
+    const congratulationsContainer = document.getElementById('congratulations-container');
+    if (!congratulationsContainer || !window.supabase) {
+        return;
+    }
+
+    try {
+        const { data: congratulations, error } = await window.supabase
+            .from('congratulations')
+            .select('*')
+            .eq('is_active', true)
+            .order('order_index', { ascending: true });
+
+        if (error) throw error;
+
+        if (!congratulations || congratulations.length === 0) {
+            congratulationsContainer.innerHTML = '<p style="color: #94a3b8; text-align: center; grid-column: 1/-1; padding: 40px;">No congratulations available at the moment.</p>';
+            return;
+        }
+
+        congratulationsContainer.innerHTML = congratulations.map(cong => {
+            let iconHTML = '';
+            
+            if (cong.icon_url) {
+                iconHTML = `<div class="congratulations-icon-wrapper">
+                    <img src="${cong.icon_url}" alt="${escapeHtml(cong.title)}">
+                </div>`;
+            } else {
+                // Use first emoji or default celebration emoji
+                iconHTML = `<div class="congratulations-icon-wrapper emoji">🎉</div>`;
+            }
+
+            return `
+                <div class="congratulations-card fade-in-up">
+                    ${iconHTML}
+                    <h3 class="congratulations-title">${escapeHtml(cong.title)}</h3>
+                    <p class="congratulations-description">${escapeHtml(cong.description)}</p>
+                    ${cong.image_url ? `<img src="${cong.image_url}" alt="${escapeHtml(cong.title)}" class="congratulations-image">` : ''}
+                </div>
+            `;
+        }).join('');
+    } catch (error) {
+        console.error('Error loading congratulations:', error);
+        congratulationsContainer.innerHTML = '<p style="color: #ef4444; text-align: center; grid-column: 1/-1; padding: 40px;">Failed to load congratulations. Please try again later.</p>';
+    }
 }

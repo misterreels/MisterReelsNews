@@ -24,6 +24,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         await loadNewsList();
         await loadVotingList();
         await loadAppsList();
+        await loadCongratulationsList();
     }
 });
 
@@ -100,6 +101,7 @@ window.addEventListener('click', (event) => {
     const newsModal = document.getElementById('news-modal');
     const votingModal = document.getElementById('voting-modal');
     const appsModal = document.getElementById('apps-modal');
+    const congratulationsModal = document.getElementById('congratulations-modal');
     const authModal = document.getElementById('auth-modal');
 
     if (newsModal && event.target === newsModal) {
@@ -110,6 +112,9 @@ window.addEventListener('click', (event) => {
     }
     if (appsModal && event.target === appsModal) {
         closeAppModal();
+    }
+    if (congratulationsModal && event.target === congratulationsModal) {
+        closeCongratulationsModal();
     }
 });
 
@@ -184,6 +189,8 @@ async function authenticateAdmin(event) {
         authAlert.innerHTML = '';
         await loadNewsList();
         await loadVotingList();
+        await loadAppsList();
+        await loadCongratulationsList();
     } else {
         showAlert('Incorrect password. Please try again.', 'error', 'auth-alert');
         document.getElementById('admin-password').value = '';
@@ -706,5 +713,191 @@ async function deleteApp(id) {
     } catch (error) {
         console.error('Error deleting application:', error);
         alert('Error deleting application. Please try again.');
+    }
+}
+
+// =========================================
+// Congratulations CRUD Operations
+// =========================================
+
+let currentEditCongratulationsId = null;
+
+function openAddCongratulationsModal() {
+    if (!currentEditCongratulationsId) {
+        currentEditCongratulationsId = null;
+        document.getElementById('congratulations-form').reset();
+        document.getElementById('congratulations-modal-title').textContent = 'Add Congratulations';
+        document.getElementById('congratulations-active').checked = true;
+    }
+    document.getElementById('congratulations-alerts').innerHTML = '';
+    const modal = document.getElementById('congratulations-modal');
+    if (modal) modal.classList.add('active');
+}
+
+function closeCongratulationsModal() {
+    const modal = document.getElementById('congratulations-modal');
+    if (modal) modal.classList.remove('active');
+    currentEditCongratulationsId = null;
+}
+
+async function loadCongratulationsList() {
+    const congratulationsList = document.getElementById('congratulations-list');
+    if (!congratulationsList || !window.supabase) return;
+
+    congratulationsList.innerHTML = '<p style="grid-column: 1/-1; color: var(--text-muted); text-align: center; padding: 40px;">Loading congratulations...</p>';
+
+    try {
+        const { data, error } = await window.supabase
+            .from('congratulations')
+            .select('*')
+            .order('order_index', { ascending: true });
+
+        if (error) throw error;
+
+        if (!data || data.length === 0) {
+            congratulationsList.innerHTML = `
+                <div style="grid-column: 1/-1; text-align: center; padding: 60px 20px; color: var(--text-muted);">
+                    <div style="font-size: 48px; margin-bottom: 20px;">🎉</div>
+                    <h3 style="font-size: 18px; color: var(--text); margin-bottom: 10px;">No Congratulations Yet</h3>
+                    <p>Click "Add Congratulations" to create your first congratulation panel.</p>
+                </div>
+            `;
+            return;
+        }
+
+        congratulationsList.innerHTML = data.map(cong => `
+            <div class="admin-card">
+                <div class="card-header">
+                    <h3 class="card-title">${escapeHtml(cong.title)}</h3>
+                    <span class="card-badge">${cong.is_active ? '✓ Active' : '⊗ Inactive'}</span>
+                </div>
+                <div class="card-meta">
+                    <div>${escapeHtml(cong.description.substring(0, 100))}${cong.description.length > 100 ? '...' : ''}</div>
+                    ${cong.icon_url ? `<div>📍 Has icon</div>` : ''}
+                    ${cong.image_url ? `<div>🖼️ Has image</div>` : ''}
+                </div>
+                <div class="card-actions">
+                    <button class="btn-small btn-edit" onclick="editCongratulations(${cong.id})">Edit</button>
+                    <button class="btn-small btn-delete" onclick="deleteCongratulations(${cong.id})">Delete</button>
+                </div>
+            </div>
+        `).join('');
+    } catch (error) {
+        console.error('Error loading congratulations:', error);
+        congratulationsList.innerHTML = '<p style="grid-column: 1/-1; color: var(--danger); text-align: center; padding: 40px;">Error loading congratulations. Please try again.</p>';
+    }
+}
+
+async function saveCongratulations(event) {
+    event.preventDefault();
+
+    const title = document.getElementById('congratulations-title').value.trim();
+    const description = document.getElementById('congratulations-description').value.trim();
+    const icon_url = document.getElementById('congratulations-icon').value.trim();
+    const image_url = document.getElementById('congratulations-image').value.trim();
+    const order_index = parseInt(document.getElementById('congratulations-order').value) || 0;
+    const is_active = document.getElementById('congratulations-active').checked;
+
+    // Validation
+    if (!title || !description) {
+        showAlert('Please fill in all required fields', 'error', 'congratulations-alerts');
+        return;
+    }
+
+    try {
+        const congratulationsData = {
+            title,
+            description,
+            icon_url: icon_url || null,
+            image_url: image_url || null,
+            order_index,
+            is_active,
+            updated_at: new Date().toISOString()
+        };
+
+        if (currentEditCongratulationsId) {
+            // Update existing
+            const { error } = await window.supabase
+                .from('congratulations')
+                .update(congratulationsData)
+                .eq('id', currentEditCongratulationsId);
+
+            if (error) throw error;
+            showAlert('Congratulations updated successfully!', 'success', 'congratulations-alerts');
+        } else {
+            // Insert new
+            const { error } = await window.supabase
+                .from('congratulations')
+                .insert([{
+                    ...congratulationsData,
+                    created_at: new Date().toISOString()
+                }]);
+
+            if (error) throw error;
+            showAlert('Congratulations created successfully!', 'success', 'congratulations-alerts');
+        }
+
+        setTimeout(() => {
+            closeCongratulationsModal();
+            loadCongratulationsList();
+        }, 1000);
+    } catch (error) {
+        console.error('Error saving congratulations:', error);
+        showAlert('Error saving congratulations. Please try again.', 'error', 'congratulations-alerts');
+    }
+}
+
+async function editCongratulations(id) {
+    if (!window.supabase) return;
+
+    try {
+        const { data, error } = await window.supabase
+            .from('congratulations')
+            .select('*')
+            .eq('id', id)
+            .single();
+
+        if (error || !data) throw error;
+
+        // Populate form
+        currentEditCongratulationsId = id;
+        document.getElementById('congratulations-title').value = data.title;
+        document.getElementById('congratulations-description').value = data.description;
+        document.getElementById('congratulations-icon').value = data.icon_url || '';
+        document.getElementById('congratulations-image').value = data.image_url || '';
+        document.getElementById('congratulations-order').value = data.order_index;
+        document.getElementById('congratulations-active').checked = data.is_active;
+        document.getElementById('congratulations-modal-title').textContent = 'Edit Congratulations';
+        document.getElementById('congratulations-alerts').innerHTML = '';
+
+        openAddCongratulationsModal();
+    } catch (error) {
+        console.error('Error loading congratulations for edit:', error);
+        alert('Error loading congratulations. Please try again.');
+    }
+}
+
+async function deleteCongratulations(id) {
+    if (!confirm('Are you sure you want to delete this congratulations panel? This action cannot be undone.')) {
+        return;
+    }
+
+    if (!window.supabase) return;
+
+    try {
+        const { error } = await window.supabase
+            .from('congratulations')
+            .delete()
+            .eq('id', id);
+
+        if (error) throw error;
+
+        showAlert('Congratulations deleted successfully!', 'success', 'congratulations-alerts');
+        setTimeout(() => {
+            loadCongratulationsList();
+        }, 1000);
+    } catch (error) {
+        console.error('Error deleting congratulations:', error);
+        alert('Error deleting congratulations. Please try again.');
     }
 }

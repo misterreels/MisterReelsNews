@@ -546,6 +546,10 @@
                     <span>📱</span>
                     <span>Applications</span>
                 </button>
+                <button class="admin-nav-item" onclick="switchTab('congratulations')">
+                    <span>🎉</span>
+                    <span>Congratulations</span>
+                </button>
                 <button class="admin-nav-item logout" onclick="logoutAdmin()">
                     <span>🚪</span>
                     <span>Logout</span>
@@ -597,6 +601,18 @@
                 </div>
 
                 <div id="apps-list" class="admin-grid"></div>
+            </div>
+
+            <!-- Congratulations Tab -->
+            <div id="congratulations-tab" class="tab-content">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+                    <h2 class="admin-title" style="margin: 0; font-size: 24px;">Congratulations Panels</h2>
+                    <button class="btn btn-primary" onclick="openAddCongratulationsModal()">
+                        <span>+</span> Add Congratulations
+                    </button>
+                </div>
+
+                <div id="congratulations-list" class="admin-grid"></div>
             </div>
         </main>
     </div>
@@ -739,6 +755,55 @@
                 <div class="form-actions">
                     <button type="submit" class="btn btn-primary" style="flex: 1;">Save Category</button>
                     <button type="button" class="btn btn-cancel" onclick="closeVotingModal()">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Congratulations Modal -->
+    <div id="congratulations-modal" class="modal">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeCongratulationsModal()">×</button>
+            <h2 class="modal-title" id="congratulations-modal-title">Add Congratulations</h2>
+
+            <div id="congratulations-alerts"></div>
+
+            <form id="congratulations-form" onsubmit="saveCongratulations(event)">
+                <div class="form-group">
+                    <label class="form-label">Title *</label>
+                    <input type="text" id="congratulations-title" class="form-input" placeholder="e.g., First Premium Subscriber" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Description *</label>
+                    <textarea id="congratulations-description" class="form-textarea" placeholder="What is this congratulation for?" required></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Icon URL (optional)</label>
+                    <input type="url" id="congratulations-icon" class="form-input" placeholder="https://example.com/icon.png">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Image URL (optional)</label>
+                    <input type="url" id="congratulations-image" class="form-input" placeholder="https://example.com/image.jpg">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Display Order</label>
+                    <input type="number" id="congratulations-order" class="form-input" value="0">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">
+                        <input type="checkbox" id="congratulations-active" checked style="margin-right: 8px; cursor: pointer;">
+                        Active
+                    </label>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary" style="flex: 1;">Save Congratulations</button>
+                    <button type="button" class="btn btn-cancel" onclick="closeCongratulationsModal()">Cancel</button>
                 </div>
             </form>
         </div>

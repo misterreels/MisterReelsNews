@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Flappy Bird Style Game - Mister Reels">
+    <meta name="keywords" content="games, flappy bird, mister reels">
+    <title>Flappy Bird Game - Mister Reels Games</title>
+    <link rel="icon" type="image/png" href="images/logo.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Playfair+Display:wght@700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .game-container {
+            max-width: 600px;
+            margin: 80px auto 60px;
+            padding: 0 20px;
+        }
+
+        .game-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .game-header h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: var(--text-primary);
+            margin-bottom: 10px;
+        }
+
+        .game-header p {
+            color: var(--text-secondary);
+            font-size: 1rem;
+        }
+
+        .back-to-games {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            background: var(--bg-card);
+            color: var(--text-primary);
+            border: 2px solid var(--border-subtle);
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            margin-bottom: 25px;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .back-to-games:hover {
+            border-color: #FFB84D;
+            background: var(--bg-primary);
+        }
+
+        .game-canvas-wrapper {
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            border: 2px solid var(--border-subtle);
+            margin-bottom: 25px;
+            text-align: center;
+        }
+
+        #gameCanvas {
+            background: linear-gradient(to bottom, #87CEEB 0%, #E0F6FF 100%);
+            border: 3px solid #FFB84D;
+            border-radius: 8px;
+            max-width: 100%;
+            display: block;
+            margin: 0 auto;
+        }
+
+        .game-info-bar {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            background: var(--bg-primary);
+            padding: 15px 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border: 1px solid var(--border-subtle);
+        }
+
+        .info-item {
+            text-align: center;
+        }
+
+        .info-label {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+
+        .info-value {
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: #FFB84D;
+        }
+
+        .game-controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .btn-control {
+            padding: 12px 30px;
+            font-size: 1rem;
+            border: 2px solid var(--border-subtle);
+            border-radius: 8px;
+            background: var(--bg-card);
+            color: var(--text-primary);
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .btn-control:hover {
+            border-color: #FFB84D;
+            background: rgba(255, 184, 77, 0.1);
+            color: #FFB84D;
+        }
+
+        .btn-control.primary {
+            background: #FFB84D;
+            color: white;
+            border-color: #FFB84D;
+        }
+
+        .btn-control.primary:hover {
+            background: #FF9800;
+        }
+
+        .game-instructions {
+            background: var(--bg-card);
+            border: 2px solid var(--border-subtle);
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 20px;
+        }
+
+        .game-instructions h3 {
+            color: #FFB84D;
+            margin-bottom: 15px;
+            font-size: 1.2rem;
+        }
+
+        .game-instructions p {
+            color: var(--text-secondary);
+            margin-bottom: 10px;
+            line-height: 1.6;
+        }
+
+        @media (max-width: 600px) {
+            .game-container {
+                margin-top: 60px;
+            }
+
+            .game-header h1 {
+                font-size: 1.8rem;
+            }
+
+            #gameCanvas {
+                max-width: 100%;
+                height: auto;
+            }
+
+            .game-info-bar {
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            .info-value {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Navigation -->
+    <header class="main-header" id="main-header">
+        <div class="header-container">
+            <a href="index.html" class="logo" id="logo-link">
+                <img src="images/logo.png" alt="Mister Reels Logo" class="logo-img">
+                <div class="logo-text">
+                    <span class="logo-name">MISTER REELS</span>
+                    <span class="logo-tagline">NEWS</span>
+                </div>
+            </a>
+            <nav class="main-nav" id="main-nav">
+                <a href="index.html" class="nav-link" id="nav-home">Home</a>
+                <a href="games.html" class="nav-link active" id="nav-games">Games</a>
+                <a href="about.html" class="nav-link">About</a>
+                <a href="contact.html" class="nav-link">Contact</a>
+                <a href="privacy.html" class="nav-link" id="nav-privacy">Privacy</a>
+            </nav>
+            <div class="header-actions">
+                <button type="button" class="menu-toggle" id="menu-toggle" aria-label="Toggle menu">
+                    <span></span><span></span><span></span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Game Content -->
+    <main class="game-container">
+        <a href="games.html" class="back-to-games">← Back to Games</a>
+
+        <div class="game-header">
+            <h1>🐦 Flappy Bird</h1>
+            <p>Tap or click to flap and avoid pipes!</p>
+        </div>
+
+        <div class="game-info-bar">
+            <div class="info-item">
+                <div class="info-label">Score</div>
+                <div class="info-value" id="scoreDisplay">0</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Best</div>
+                <div class="info-value" id="bestDisplay">0</div>
+            </div>
+        </div>
+
+        <div class="game-canvas-wrapper">
+            <canvas id="gameCanvas" width="400" height="600"></canvas>
+        </div>
+
+        <div class="game-controls">
+            <button class="btn-control primary" id="startBtn" onclick="startGame()">▶ START</button>
+            <button class="btn-control" id="pauseBtn" onclick="togglePause()" style="display: none;">⏸ PAUSE</button>
+            <button class="btn-control" onclick="location.href='games.html'">← Back to Games</button>
+        </div>
+
+        <div class="game-instructions">
+            <h3>🎮 How to Play</h3>
+            <p><strong>Click or Tap:</strong> Make the bird flap to fly up</p>
+            <p><strong>Gravity:</strong> The bird constantly falls, so keep flapping!</p>
+            <p><strong>Pipes:</strong> Avoid hitting the pipes</p>
+            <p><strong>Scoring:</strong> +1 point for each pipe you pass</p>
+            <p><strong>Goal:</strong> Get the highest score!</p>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="main-footer">
+        <div class="footer-container">
+            <div class="footer-grid">
+                <div class="footer-brand">
+                    <div class="footer-logo">
+                        <img src="images/logo.png" alt="Mister Reels Logo" class="footer-logo-img">
+                        <span class="footer-logo-text">MISTER REELS NEWS</span>
+                    </div>
+                    <p class="footer-about">Exclusive content for Mister Reels subscribers. Based in Erankulam, Kerala.</p>
+                </div>
+                <div class="footer-links-section">
+                    <h4 class="footer-heading">Quick Links</h4>
+                    <ul class="footer-links">
+                        <li><a href="index.html">Home</a></li>
+                        <li><a href="about.html">About Us</a></li>
+                        <li><a href="contact.html">Contact</a></li>
+                        <li><a href="privacy.html">Privacy Policy</a></li>
+                    </ul>
+                </div>
+                <div class="footer-links-section">
+                    <h4 class="footer-heading">Follow Us</h4>
+                    <div class="social-links">
+                        <a href="https://x.com/misterreelsnews" class="social-link" aria-label="Twitter">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+                        </a>
+                        <a href="https://youtube.com/@misterreels88?si=kf_NVko1CmWI25w8" class="social-link" aria-label="YouTube">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2026 Mister Reels News. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script>
+        // ==================== GAME CONFIG ====================
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        let gameRunning = false;
+        let gamePaused = false;
+        let score = 0;
+        let bestScore = localStorage.getItem('flappyBestScore') || 0;
+        document.getElementById('bestDisplay').textContent = bestScore;
+
+        // Bird
+        const bird = {
+            x: 50,
+            y: canvas.height / 2,
+            width: 30,
+            height: 30,
+            velocity: 0,
+            gravity: 0.5,
+            flap: -10
+        };
+
+        // Pipes
+        let pipes = [];
+        const pipeGap = 120;
+        const pipeWidth = 60;
+        let pipeDelay = 0;
+        const pipeInterval = 120;
+
+        // ==================== HELPER FUNCTIONS ====================
+        function generatePipe() {
+            const minHeight = 50;
+            const maxHeight = canvas.height - pipeGap - 50;
+            const topHeight = Math.random() * (maxHeight - minHeight) + minHeight;
+
+            pipes.push({
+                x: canvas.width,
+                topHeight: topHeight,
+                bottomY: topHeight + pipeGap,
+                passed: false
+            });
+        }
+
+        function startGame() {
+            gameRunning = true;
+            gamePaused = false;
+            score = 0;
+            bird.y = canvas.height / 2;
+            bird.velocity = 0;
+            pipes = [];
+            pipeDelay = 0;
+
+            document.getElementById('scoreDisplay').textContent = '0';
+            document.getElementById('startBtn').style.display = 'none';
+            document.getElementById('pauseBtn').style.display = 'inline-block';
+
+            gameLoop();
+        }
+
+        function togglePause() {
+            gamePaused = !gamePaused;
+            document.getElementById('pauseBtn').textContent = gamePaused ? '▶ RESUME' : '⏸ PAUSE';
+            if (!gamePaused) {
+                gameLoop();
+            }
+        }
+
+        function flapBird() {
+            if (gameRunning && !gamePaused) {
+                bird.velocity = bird.flap;
+            } else if (!gameRunning) {
+                startGame();
+            }
+        }
+
+        function update() {
+            // Bird physics
+            bird.velocity += bird.gravity;
+            bird.y += bird.velocity;
+
+            // Boundaries
+            if (bird.y + bird.height > canvas.height || bird.y < 0) {
+                endGame();
+                return;
+            }
+
+            // Pipe generation
+            pipeDelay++;
+            if (pipeDelay > pipeInterval) {
+                generatePipe();
+                pipeDelay = 0;
+            }
+
+            // Update pipes
+            for (let i = pipes.length - 1; i >= 0; i--) {
+                pipes[i].x -= 5;
+
+                // Check collision
+                if (bird.x < pipes[i].x + pipeWidth &&
+                    bird.x + bird.width > pipes[i].x &&
+                    (bird.y < pipes[i].topHeight || bird.y + bird.height > pipes[i].bottomY)) {
+                    endGame();
+                    return;
+                }
+
+                // Score
+                if (!pipes[i].passed && bird.x > pipes[i].x + pipeWidth) {
+                    pipes[i].passed = true;
+                    score++;
+                    document.getElementById('scoreDisplay').textContent = score;
+                }
+
+                // Remove off-screen pipes
+                if (pipes[i].x < -pipeWidth) {
+                    pipes.splice(i, 1);
+                }
+            }
+        }
+
+        function draw() {
+            // Background
+            ctx.fillStyle = 'rgba(135, 206, 235, 0.3)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Clouds
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+            ctx.beginPath();
+            ctx.arc(80, 80, 30, 0, Math.PI * 2);
+            ctx.arc(120, 85, 25, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.beginPath();
+            ctx.arc(300, 100, 35, 0, Math.PI * 2);
+            ctx.arc(350, 95, 28, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Bird
+            ctx.fillStyle = '#FFB84D';
+            ctx.beginPath();
+            ctx.arc(bird.x + bird.width / 2, bird.y + bird.height / 2, bird.width / 2, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Bird eye
+            ctx.fillStyle = 'white';
+            ctx.beginPath();
+            ctx.arc(bird.x + 20, bird.y + 10, 5, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.fillStyle = 'black';
+            ctx.beginPath();
+            ctx.arc(bird.x + 22, bird.y + 10, 3, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Pipes
+            ctx.fillStyle = '#4CAF50';
+            for (let pipe of pipes) {
+                // Top pipe
+                ctx.fillRect(pipe.x, 0, pipeWidth, pipe.topHeight);
+                // Bottom pipe
+                ctx.fillRect(pipe.x, pipe.bottomY, pipeWidth, canvas.height - pipe.bottomY);
+            }
+
+            // Ground
+            ctx.fillStyle = '#8B7355';
+            ctx.fillRect(0, canvas.height - 10, canvas.width, 10);
+        }
+
+        function gameLoop() {
+            if (gamePaused || !gameRunning) return;
+
+            update();
+            draw();
+            requestAnimationFrame(gameLoop);
+        }
+
+        function endGame() {
+            gameRunning = false;
+
+            if (score > bestScore) {
+                bestScore = score;
+                localStorage.setItem('flappyBestScore', bestScore);
+                document.getElementById('bestDisplay').textContent = bestScore;
+            }
+
+            document.getElementById('pauseBtn').style.display = 'none';
+            document.getElementById('startBtn').style.display = 'inline-block';
+        }
+
+        // ==================== CONTROLS ====================
+        document.addEventListener('click', flapBird);
+        document.addEventListener('touchstart', flapBird);
+        document.addEventListener('keydown', (e) => {
+            if (e.key === ' ') {
+                e.preventDefault();
+                flapBird();
+            }
+        });
+
+        // Initial draw
+        draw();
+    </script>
+
+    <script src="script.js"></script>
+</body>
+
+</html>

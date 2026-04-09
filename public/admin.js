@@ -6,6 +6,7 @@
 let currentEditNewsId = null;
 let currentEditVotingId = null;
 let currentEditAppId = null;
+let currentEditCommunityId = null;
 
 // =========================================
 // Initialization - Check Authentication
@@ -24,7 +25,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         await loadNewsList();
         await loadVotingList();
         await loadAppsList();
-        await loadCongratulationsList();
+        await loadCommunityList();
     }
 });
 
@@ -96,12 +97,31 @@ function closeAppModal() {
     currentEditAppId = null;
 }
 
+function openAddCommunityModal() {
+    if (!currentEditCommunityId) {
+        currentEditCommunityId = null;
+        document.getElementById('community-form').reset();
+        document.getElementById('community-modal-title').textContent = 'Add Community Post';
+        document.getElementById('community-published').checked = true;
+        document.getElementById('community-author').value = 'Mister Reels';
+    }
+    document.getElementById('community-alerts').innerHTML = '';
+    const modal = document.getElementById('community-modal');
+    if (modal) modal.classList.add('active');
+}
+
+function closeCommunityModal() {
+    const modal = document.getElementById('community-modal');
+    if (modal) modal.classList.remove('active');
+    currentEditCommunityId = null;
+}
+
 // Close modal when clicking outside
 window.addEventListener('click', (event) => {
     const newsModal = document.getElementById('news-modal');
     const votingModal = document.getElementById('voting-modal');
     const appsModal = document.getElementById('apps-modal');
-    const congratulationsModal = document.getElementById('congratulations-modal');
+    const communityModal = document.getElementById('community-modal');
     const authModal = document.getElementById('auth-modal');
 
     if (newsModal && event.target === newsModal) {
@@ -113,8 +133,8 @@ window.addEventListener('click', (event) => {
     if (appsModal && event.target === appsModal) {
         closeAppModal();
     }
-    if (congratulationsModal && event.target === congratulationsModal) {
-        closeCongratulationsModal();
+    if (communityModal && event.target === communityModal) {
+        closeCommunityModal();
     }
 });
 
@@ -190,7 +210,7 @@ async function authenticateAdmin(event) {
         await loadNewsList();
         await loadVotingList();
         await loadAppsList();
-        await loadCongratulationsList();
+        await loadCommunityList();
     } else {
         showAlert('Incorrect password. Please try again.', 'error', 'auth-alert');
         document.getElementById('admin-password').value = '';
@@ -717,142 +737,118 @@ async function deleteApp(id) {
 }
 
 // =========================================
-// Congratulations CRUD Operations
+// Community CRUD Operations
 // =========================================
 
-let currentEditCongratulationsId = null;
+async function loadCommunityList() {
+    const communityList = document.getElementById('community-list');
+    if (!communityList || !window.supabase) return;
 
-function openAddCongratulationsModal() {
-    if (!currentEditCongratulationsId) {
-        currentEditCongratulationsId = null;
-        document.getElementById('congratulations-form').reset();
-        document.getElementById('congratulations-modal-title').textContent = 'Add Congratulations';
-        document.getElementById('congratulations-active').checked = true;
-    }
-    document.getElementById('congratulations-alerts').innerHTML = '';
-    const modal = document.getElementById('congratulations-modal');
-    if (modal) modal.classList.add('active');
-}
-
-function closeCongratulationsModal() {
-    const modal = document.getElementById('congratulations-modal');
-    if (modal) modal.classList.remove('active');
-    currentEditCongratulationsId = null;
-}
-
-async function loadCongratulationsList() {
-    const congratulationsList = document.getElementById('congratulations-list');
-    if (!congratulationsList || !window.supabase) return;
-
-    congratulationsList.innerHTML = '<p style="grid-column: 1/-1; color: var(--text-muted); text-align: center; padding: 40px;">Loading congratulations...</p>';
+    communityList.innerHTML = '<p style="grid-column: 1/-1; color: var(--text-muted); text-align: center; padding: 40px;">Loading posts...</p>';
 
     try {
         const { data, error } = await window.supabase
-            .from('congratulations')
+            .from('community_posts')
             .select('*')
-            .order('order_index', { ascending: true });
+            .order('created_at', { ascending: false });
 
         if (error) throw error;
 
         if (!data || data.length === 0) {
-            congratulationsList.innerHTML = `
+            communityList.innerHTML = `
                 <div style="grid-column: 1/-1; text-align: center; padding: 60px 20px; color: var(--text-muted);">
-                    <div style="font-size: 48px; margin-bottom: 20px;">🎉</div>
-                    <h3 style="font-size: 18px; color: var(--text); margin-bottom: 10px;">No Congratulations Yet</h3>
-                    <p>Click "Add Congratulations" to create your first congratulation panel.</p>
+                    <div style="font-size: 48px; margin-bottom: 20px;">👥</div>
+                    <h3 style="font-size: 18px; color: var(--text); margin-bottom: 10px;">No Posts Yet</h3>
+                    <p>Click "Add Post" to create your first community post.</p>
                 </div>
             `;
             return;
         }
 
-        congratulationsList.innerHTML = data.map(cong => `
+        communityList.innerHTML = data.map(post => `
             <div class="admin-card">
                 <div class="card-header">
-                    <h3 class="card-title">${escapeHtml(cong.title)}</h3>
-                    <span class="card-badge">${cong.is_active ? '✓ Active' : '⊗ Inactive'}</span>
+                    <h3 class="card-title">${escapeHtml(post.author_name || 'Mister Reels')}</h3>
+                    <span class="card-badge">${post.is_published ? '✓ Published' : '⊗ Draft'}</span>
                 </div>
                 <div class="card-meta">
-                    <div>${escapeHtml(cong.description.substring(0, 100))}${cong.description.length > 100 ? '...' : ''}</div>
-                    ${cong.icon_url ? `<div>📍 Has icon</div>` : ''}
-                    ${cong.image_url ? `<div>🖼️ Has image</div>` : ''}
+                    <div style="margin-bottom: 8px;">${escapeHtml(post.content.substring(0, 100))}${post.content.length > 100 ? '...' : ''}</div>
+                    ${post.image_url ? `<div>🖼️ Has image</div>` : ''}
+                    <div style="font-size: 11px; opacity: 0.7;">${new Date(post.created_at).toLocaleString()}</div>
                 </div>
                 <div class="card-actions">
-                    <button class="btn-small btn-edit" onclick="editCongratulations(${cong.id})">Edit</button>
-                    <button class="btn-small btn-delete" onclick="deleteCongratulations(${cong.id})">Delete</button>
+                    <button class="btn-small btn-edit" onclick="editCommunityPost(${post.id})">Edit</button>
+                    <button class="btn-small btn-delete" onclick="deleteCommunityPost(${post.id})">Delete</button>
                 </div>
             </div>
         `).join('');
     } catch (error) {
-        console.error('Error loading congratulations:', error);
-        congratulationsList.innerHTML = '<p style="grid-column: 1/-1; color: var(--danger); text-align: center; padding: 40px;">Error loading congratulations. Please try again.</p>';
+        console.error('Error loading community posts:', error);
+        communityList.innerHTML = '<p style="grid-column: 1/-1; color: var(--danger); text-align: center; padding: 40px;">Error loading posts. Please try again.</p>';
     }
 }
 
-async function saveCongratulations(event) {
+async function saveCommunityPost(event) {
     event.preventDefault();
 
-    const title = document.getElementById('congratulations-title').value.trim();
-    const description = document.getElementById('congratulations-description').value.trim();
-    const icon_url = document.getElementById('congratulations-icon').value.trim();
-    const image_url = document.getElementById('congratulations-image').value.trim();
-    const order_index = parseInt(document.getElementById('congratulations-order').value) || 0;
-    const is_active = document.getElementById('congratulations-active').checked;
+    const author = document.getElementById('community-author').value.trim();
+    const content = document.getElementById('community-content').value.trim();
+    const image_url = document.getElementById('community-image').value.trim();
+    const is_published = document.getElementById('community-published').checked;
 
     // Validation
-    if (!title || !description) {
-        showAlert('Please fill in all required fields', 'error', 'congratulations-alerts');
+    if (!author || !content) {
+        showAlert('Please fill in all required fields', 'error', 'community-alerts');
         return;
     }
 
     try {
-        const congratulationsData = {
-            title,
-            description,
-            icon_url: icon_url || null,
+        const postData = {
+            author_name: author,
+            content,
             image_url: image_url || null,
-            order_index,
-            is_active,
+            is_published,
             updated_at: new Date().toISOString()
         };
 
-        if (currentEditCongratulationsId) {
+        if (currentEditCommunityId) {
             // Update existing
             const { error } = await window.supabase
-                .from('congratulations')
-                .update(congratulationsData)
-                .eq('id', currentEditCongratulationsId);
+                .from('community_posts')
+                .update(postData)
+                .eq('id', currentEditCommunityId);
 
             if (error) throw error;
-            showAlert('Congratulations updated successfully!', 'success', 'congratulations-alerts');
+            showAlert('Post updated successfully!', 'success', 'community-alerts');
         } else {
             // Insert new
             const { error } = await window.supabase
-                .from('congratulations')
+                .from('community_posts')
                 .insert([{
-                    ...congratulationsData,
+                    ...postData,
                     created_at: new Date().toISOString()
                 }]);
 
             if (error) throw error;
-            showAlert('Congratulations created successfully!', 'success', 'congratulations-alerts');
+            showAlert('Post created successfully!', 'success', 'community-alerts');
         }
 
         setTimeout(() => {
-            closeCongratulationsModal();
-            loadCongratulationsList();
+            closeCommunityModal();
+            loadCommunityList();
         }, 1000);
     } catch (error) {
-        console.error('Error saving congratulations:', error);
-        showAlert('Error saving congratulations. Please try again.', 'error', 'congratulations-alerts');
+        console.error('Error saving community post:', error);
+        showAlert('Error saving post. Please try again.', 'error', 'community-alerts');
     }
 }
 
-async function editCongratulations(id) {
+async function editCommunityPost(id) {
     if (!window.supabase) return;
 
     try {
         const { data, error } = await window.supabase
-            .from('congratulations')
+            .from('community_posts')
             .select('*')
             .eq('id', id)
             .single();
@@ -860,44 +856,48 @@ async function editCongratulations(id) {
         if (error || !data) throw error;
 
         // Populate form
-        currentEditCongratulationsId = id;
-        document.getElementById('congratulations-title').value = data.title;
-        document.getElementById('congratulations-description').value = data.description;
-        document.getElementById('congratulations-icon').value = data.icon_url || '';
-        document.getElementById('congratulations-image').value = data.image_url || '';
-        document.getElementById('congratulations-order').value = data.order_index;
-        document.getElementById('congratulations-active').checked = data.is_active;
-        document.getElementById('congratulations-modal-title').textContent = 'Edit Congratulations';
-        document.getElementById('congratulations-alerts').innerHTML = '';
+        currentEditCommunityId = id;
+        document.getElementById('community-author').value = data.author_name;
+        document.getElementById('community-content').value = data.content;
+        document.getElementById('community-image').value = data.image_url || '';
+        document.getElementById('community-published').checked = data.is_published;
+        document.getElementById('community-modal-title').textContent = 'Edit Community Post';
+        document.getElementById('community-alerts').innerHTML = '';
 
-        openAddCongratulationsModal();
+        openAddCommunityModal();
     } catch (error) {
-        console.error('Error loading congratulations for edit:', error);
-        alert('Error loading congratulations. Please try again.');
+        console.error('Error loading community post for edit:', error);
+        alert('Error loading post. Please try again.');
     }
 }
 
-async function deleteCongratulations(id) {
-    if (!confirm('Are you sure you want to delete this congratulations panel? This action cannot be undone.')) {
+async function deleteCommunityPost(id) {
+    if (!confirm('Are you sure you want to delete this community post? This action cannot be undone.')) {
         return;
     }
 
     if (!window.supabase) return;
 
     try {
+        // First delete comments for this post
+        await window.supabase
+            .from('community_comments')
+            .delete()
+            .eq('post_id', id);
+
         const { error } = await window.supabase
-            .from('congratulations')
+            .from('community_posts')
             .delete()
             .eq('id', id);
 
         if (error) throw error;
 
-        showAlert('Congratulations deleted successfully!', 'success', 'congratulations-alerts');
+        showAlert('Post deleted successfully!', 'success', 'community-alerts');
         setTimeout(() => {
-            loadCongratulationsList();
+            loadCommunityList();
         }, 1000);
     } catch (error) {
-        console.error('Error deleting congratulations:', error);
-        alert('Error deleting congratulations. Please try again.');
+        console.error('Error deleting community post:', error);
+        alert('Error deleting post. Please try again.');
     }
 }

@@ -720,8 +720,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Load applications
     await loadApplications();
 
-    // Load congratulations
-    await loadCongratulations();
+    // Load community posts
+    await loadCommunityPosts();
 });
 
 /* =========================================
@@ -810,52 +810,334 @@ function handleDownload(btn, url, title) {
 }
 
 /* =========================================
-   Congratulations System
+   Community System (YouTube-like)
    ========================================= */
 
-async function loadCongratulations() {
-    const congratulationsContainer = document.getElementById('congratulations-container');
-    if (!congratulationsContainer || !window.supabase) {
-        return;
+// Helper to get user name
+async function getUserName() {
+    // 1. Check local storage
+    let name = localStorage.getItem('misterreels_user_name');
+    if (name) return name;
+
+    // 2. Check database for this device fingerprint
+    if (window.supabase) {
+        try {
+            const deviceId = getDeviceId();
+            const { data, error } = await window.supabase
+                .from('community_comments')
+                .select('author_name')
+                .eq('device_id', deviceId)
+                .order('created_at', { ascending: false })
+                .limit(1);
+            
+            if (!error && data && data.length > 0) {
+                name = data[0].author_name;
+                localStorage.setItem('misterreels_user_name', name);
+                return name;
+            }
+        } catch (e) {
+            console.error('Error fetching name from DB:', e);
+        }
     }
+    return null;
+}
+
+async function loadCommunityPosts() {
+    const communityContainer = document.getElementById('community-container');
+    if (!communityContainer || !window.supabase) return;
 
     try {
-        const { data: congratulations, error } = await window.supabase
-            .from('congratulations')
+        const { data: posts, error } = await window.supabase
+            .from('community_posts')
             .select('*')
-            .eq('is_active', true)
-            .order('order_index', { ascending: true });
+            .eq('is_published', true)
+            .order('created_at', { ascending: false });
 
         if (error) throw error;
 
-        if (!congratulations || congratulations.length === 0) {
-            congratulationsContainer.innerHTML = '<p style="color: #94a3b8; text-align: center; grid-column: 1/-1; padding: 40px;">No congratulations available at the moment.</p>';
+        if (!posts || posts.length === 0) {
+            communityContainer.innerHTML = '<p style="color: #94a3b8; text-align: center; grid-column: 1/-1; padding: 40px;">No community posts available at the moment.</p>';
             return;
         }
 
-        congratulationsContainer.innerHTML = congratulations.map(cong => {
-            let iconHTML = '';
-            
-            if (cong.icon_url) {
-                iconHTML = `<div class="congratulations-icon-wrapper">
-                    <img src="${cong.icon_url}" alt="${escapeHtml(cong.title)}">
-                </div>`;
-            } else {
-                // Use first emoji or default celebration emoji
-                iconHTML = `<div class="congratulations-icon-wrapper emoji">🎉</div>`;
-            }
-
-            return `
-                <div class="congratulations-card fade-in-up">
-                    ${iconHTML}
-                    <h3 class="congratulations-title">${escapeHtml(cong.title)}</h3>
-                    <p class="congratulations-description">${escapeHtml(cong.description)}</p>
-                    ${cong.image_url ? `<img src="${cong.image_url}" alt="${escapeHtml(cong.title)}" class="congratulations-image">` : ''}
-                </div>
-            `;
-        }).join('');
+        communityContainer.innerHTML = '';
+        const storedName = await getUserName();
+        
+        for (const post of posts) {
+            const postElement = await createPostElement(post, storedName);
+            communityContainer.appendChild(postElement);
+        }
     } catch (error) {
-        console.error('Error loading congratulations:', error);
-        congratulationsContainer.innerHTML = '<p style="color: #ef4444; text-align: center; grid-column: 1/-1; padding: 40px;">Failed to load congratulations. Please try again later.</p>';
+        console.error('Error loading community posts:', error);
+        communityContainer.innerHTML = '<p style="color: #ef4444; text-align: center; grid-column: 1/-1; padding: 40px;">Failed to load community posts. Please try again later.</p>';
+    }
+}
+
+async function createPostElement(post, storedName) {
+    const postDiv = document.createElement('div');
+    postDiv.className = 'community-post fade-in-up';
+    postDiv.id = `post-${post.id}`;
+    
+    const date = new Date(post.created_at).toLocaleDateString(undefined, { 
+        year: 'numeric', month: 'short', day: 'numeric' 
+    });
+    
+    const authorInitial = (post.author_name || 'M').charAt(0).toUpperCase();
+    
+    postDiv.innerHTML = `
+        <div class="post-header">
+            <div class="author-avatar">${authorInitial}</div>
+            <div class="author-info">
+                <span class="author-name">${escapeHtml(post.author_name || 'Mister Reels')}</span>
+                <span class="post-date">${date}</span>
+            </div>
+        </div>
+        <div class="post-content">${escapeHtml(post.content)}</div>
+        ${post.image_url ? `<img src="${post.image_url}" alt="Post image" class="post-image" loading="lazy">` : ''}
+        <div class="post-actions">
+            <button class="action-btn" onclick="toggleComments(${post.id})">
+                <span>💬</span> <span id="comment-count-${post.id}">0</span> Comments
+            </button>
+        </div>
+        <div class="comments-section" id="comments-section-${post.id}" style="display: none;">
+            <div class="comments-list" id="comments-list-${post.id}">
+                <p style="color: #94a3b8; font-size: 12px; text-align: center; padding: 10px;">Loading comments...</p>
+            </div>
+            <div class="add-comment" id="post-comment-form-${post.id}">
+                <div class="comment-inputs-row">
+                    ${!storedName ? `<input type="text" id="comment-name-${post.id}" class="comment-name-input" placeholder="Your Name" required>` : ''}
+                    <div class="comment-content-wrapper">
+                        <input type="text" id="comment-input-${post.id}" class="comment-input" placeholder="Add a comment...">
+                        <button class="comment-submit" onclick="submitComment(${post.id})">➤</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    loadCommentCount(post.id);
+    return postDiv;
+}
+
+async function loadCommentCount(postId) {
+    try {
+        const { count, error } = await window.supabase
+            .from('community_comments')
+            .select('*', { count: 'exact', head: true })
+            .eq('post_id', postId);
+            
+        if (!error) {
+            const countElement = document.getElementById(`comment-count-${postId}`);
+            if (countElement) countElement.textContent = count || 0;
+        }
+    } catch (e) {
+        console.error('Error loading comment count:', e);
+    }
+}
+
+async function toggleComments(postId) {
+    const section = document.getElementById(`comments-section-${postId}`);
+    if (section.style.display === 'none') {
+        section.style.display = 'block';
+        loadComments(postId);
+    } else {
+        section.style.display = 'none';
+    }
+}
+
+async function loadComments(postId) {
+    const list = document.getElementById(`comments-list-${postId}`);
+    if (!list) return;
+    
+    try {
+        const { data: comments, error } = await window.supabase
+            .from('community_comments')
+            .select('*')
+            .eq('post_id', postId)
+            .order('created_at', { ascending: true });
+            
+        if (error) throw error;
+        
+        if (!comments || comments.length === 0) {
+            list.innerHTML = '<p style="color: #94a3b8; font-size: 12px; text-align: center; padding: 10px;">No comments yet. Be the first to comment!</p>';
+            return;
+        }
+        
+        const topLevelComments = comments.filter(c => !c.parent_id);
+        const replies = comments.filter(c => c.parent_id);
+        
+        list.innerHTML = '';
+        
+        topLevelComments.forEach(comment => {
+            const commentElement = renderComment(comment, replies, postId);
+            list.appendChild(commentElement);
+        });
+        
+        const countElement = document.getElementById(`comment-count-${postId}`);
+        if (countElement) countElement.textContent = comments.length;
+        
+        list.scrollTop = list.scrollHeight;
+    } catch (error) {
+        console.error('Error loading comments:', error);
+        list.innerHTML = '<p style="color: #ef4444; font-size: 12px; text-align: center; padding: 10px;">Error loading comments.</p>';
+    }
+}
+
+function renderComment(comment, allReplies, postId, isReply = false) {
+    const commentDiv = document.createElement('div');
+    commentDiv.className = isReply ? 'comment is-reply' : 'comment-wrapper';
+    
+    const initial = (comment.author_name || 'S').charAt(0).toUpperCase();
+    const commentId = comment.id;
+    
+    let html = `
+        <div class="comment" id="comment-${commentId}">
+            <div class="comment-avatar">${initial}</div>
+            <div class="comment-body">
+                <span class="comment-author">${escapeHtml(comment.author_name || 'Subscriber')}</span>
+                <p>${escapeHtml(comment.content)}</p>
+                <div class="comment-footer">
+                    <span class="comment-reply-btn" onclick="showReplyForm(${postId}, ${commentId})">Reply</span>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    if (!isReply) {
+        const directReplies = allReplies.filter(r => r.parent_id === commentId);
+        if (directReplies.length > 0) {
+            html += `<div class="replies-list" id="replies-to-${commentId}">`;
+            directReplies.forEach(reply => {
+                const rInitial = (reply.author_name || 'S').charAt(0).toUpperCase();
+                html += `
+                    <div class="comment is-reply">
+                        <div class="comment-avatar">${rInitial}</div>
+                        <div class="comment-body">
+                            <span class="comment-author">${escapeHtml(reply.author_name || 'Subscriber')}</span>
+                            <p>${escapeHtml(reply.content)}</p>
+                        </div>
+                    </div>
+                `;
+            });
+            html += `</div>`;
+        } else {
+            html += `<div class="replies-list" id="replies-to-${commentId}" style="display:none;"></div>`;
+        }
+        
+        html += `<div id="reply-form-container-${commentId}" class="reply-form-container"></div>`;
+    }
+    
+    commentDiv.innerHTML = html;
+    return commentDiv;
+}
+
+async function showReplyForm(postId, parentId) {
+    const existingForms = document.querySelectorAll('.reply-form-container');
+    existingForms.forEach(f => f.innerHTML = '');
+    
+    const container = document.getElementById(`reply-form-container-${parentId}`);
+    const storedName = await getUserName();
+    
+    container.innerHTML = `
+        <div class="add-comment reply-form">
+            <div class="comment-inputs-row">
+                ${!storedName ? `<input type="text" id="reply-name-${parentId}" class="comment-name-input" placeholder="Name" required>` : ''}
+                <div class="comment-content-wrapper">
+                    <input type="text" id="reply-input-${parentId}" class="comment-input" placeholder="Write a reply...">
+                    <button class="comment-submit" onclick="submitReply(${postId}, ${parentId})">➤</button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    container.querySelector('.comment-input').focus();
+}
+
+async function submitComment(postId) {
+    const input = document.getElementById(`comment-input-${postId}`);
+    const nameInput = document.getElementById(`comment-name-${postId}`);
+    const content = input.value.trim();
+    
+    if (!content) return;
+
+    let authorName = localStorage.getItem('misterreels_user_name');
+    if (!authorName) {
+        if (!nameInput || !nameInput.value.trim()) {
+            alert('Please enter your name before commenting.');
+            return;
+        }
+        authorName = nameInput.value.trim();
+    }
+    
+    const deviceId = getDeviceId();
+    
+    try {
+        const { error } = await window.supabase
+            .from('community_comments')
+            .insert([{
+                post_id: postId,
+                author_name: authorName,
+                content: content,
+                device_id: deviceId
+            }]);
+            
+        if (error) throw error;
+        
+        localStorage.setItem('misterreels_user_name', authorName);
+        input.value = '';
+        
+        // Hide name inputs globally since name is now saved
+        document.querySelectorAll('.comment-name-input').forEach(el => el.remove());
+        
+        loadComments(postId);
+        loadCommentCount(postId);
+    } catch (error) {
+        console.error('Error submitting comment:', error);
+        alert('Failed to post comment. Please try again.');
+    }
+}
+
+async function submitReply(postId, parentId) {
+    const input = document.getElementById(`reply-input-${parentId}`);
+    const nameInput = document.getElementById(`reply-name-${parentId}`);
+    const content = input.value.trim();
+    
+    if (!content) return;
+
+    let authorName = localStorage.getItem('misterreels_user_name');
+    if (!authorName) {
+        if (!nameInput || !nameInput.value.trim()) {
+            alert('Please enter your name before replying.');
+            return;
+        }
+        authorName = nameInput.value.trim();
+    }
+    
+    const deviceId = getDeviceId();
+    
+    try {
+        const { error } = await window.supabase
+            .from('community_comments')
+            .insert([{
+                post_id: postId,
+                parent_id: parentId,
+                author_name: authorName,
+                content: content,
+                device_id: deviceId
+            }]);
+            
+        if (error) throw error;
+        
+        localStorage.setItem('misterreels_user_name', authorName);
+        document.getElementById(`reply-form-container-${parentId}`).innerHTML = '';
+        
+        // Hide name inputs globally since name is now saved
+        document.querySelectorAll('.comment-name-input').forEach(el => el.remove());
+        
+        loadComments(postId);
+        loadCommentCount(postId);
+    } catch (error) {
+        console.error('Error submitting reply:', error);
+        alert('Failed to post reply. Please try again.');
     }
 }

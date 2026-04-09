@@ -546,9 +546,9 @@
                     <span>📱</span>
                     <span>Applications</span>
                 </button>
-                <button class="admin-nav-item" onclick="switchTab('congratulations')">
-                    <span>🎉</span>
-                    <span>Congratulations</span>
+                <button class="admin-nav-item" onclick="switchTab('community')">
+                    <span>👥</span>
+                    <span>Community</span>
                 </button>
                 <button class="admin-nav-item logout" onclick="logoutAdmin()">
                     <span>🚪</span>
@@ -603,16 +603,16 @@
                 <div id="apps-list" class="admin-grid"></div>
             </div>
 
-            <!-- Congratulations Tab -->
-            <div id="congratulations-tab" class="tab-content">
+            <!-- Community Tab -->
+            <div id="community-tab" class="tab-content">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
-                    <h2 class="admin-title" style="margin: 0; font-size: 24px;">Congratulations Panels</h2>
-                    <button class="btn btn-primary" onclick="openAddCongratulationsModal()">
-                        <span>+</span> Add Congratulations
+                    <h2 class="admin-title" style="margin: 0; font-size: 24px;">Community Posts</h2>
+                    <button class="btn btn-primary" onclick="openAddCommunityModal()">
+                        <span>+</span> Add Post
                     </button>
                 </div>
 
-                <div id="congratulations-list" class="admin-grid"></div>
+                <div id="community-list" class="admin-grid"></div>
             </div>
         </main>
     </div>
@@ -760,50 +760,40 @@
         </div>
     </div>
 
-    <!-- Congratulations Modal -->
-    <div id="congratulations-modal" class="modal">
+    <!-- Community Modal -->
+    <div id="community-modal" class="modal">
         <div class="modal-content">
-            <button class="modal-close" onclick="closeCongratulationsModal()">×</button>
-            <h2 class="modal-title" id="congratulations-modal-title">Add Congratulations</h2>
+            <button class="modal-close" onclick="closeCommunityModal()">×</button>
+            <h2 class="modal-title" id="community-modal-title">Add Community Post</h2>
 
-            <div id="congratulations-alerts"></div>
+            <div id="community-alerts"></div>
 
-            <form id="congratulations-form" onsubmit="saveCongratulations(event)">
+            <form id="community-form" onsubmit="saveCommunityPost(event)">
                 <div class="form-group">
-                    <label class="form-label">Title *</label>
-                    <input type="text" id="congratulations-title" class="form-input" placeholder="e.g., First Premium Subscriber" required>
+                    <label class="form-label">Author Name *</label>
+                    <input type="text" id="community-author" class="form-input" placeholder="Mister Reels" required>
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label">Description *</label>
-                    <textarea id="congratulations-description" class="form-textarea" placeholder="What is this congratulation for?" required></textarea>
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label">Icon URL (optional)</label>
-                    <input type="url" id="congratulations-icon" class="form-input" placeholder="https://example.com/icon.png">
+                    <label class="form-label">Content *</label>
+                    <textarea id="community-content" class="form-textarea" placeholder="What's on your mind?" required></textarea>
                 </div>
 
                 <div class="form-group">
                     <label class="form-label">Image URL (optional)</label>
-                    <input type="url" id="congratulations-image" class="form-input" placeholder="https://example.com/image.jpg">
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label">Display Order</label>
-                    <input type="number" id="congratulations-order" class="form-input" value="0">
+                    <input type="url" id="community-image" class="form-input" placeholder="https://example.com/image.jpg">
                 </div>
 
                 <div class="form-group">
                     <label class="form-label">
-                        <input type="checkbox" id="congratulations-active" checked style="margin-right: 8px; cursor: pointer;">
-                        Active
+                        <input type="checkbox" id="community-published" checked style="margin-right: 8px; cursor: pointer;">
+                        Published
                     </label>
                 </div>
 
                 <div class="form-actions">
-                    <button type="submit" class="btn btn-primary" style="flex: 1;">Save Congratulations</button>
-                    <button type="button" class="btn btn-cancel" onclick="closeCongratulationsModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary" style="flex: 1;">Save Post</button>
+                    <button type="button" class="btn btn-cancel" onclick="closeCommunityModal()">Cancel</button>
                 </div>
             </form>
         </div>
